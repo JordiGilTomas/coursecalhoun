@@ -1,0 +1,4 @@
+- path: /goo
+  url: https://www.google.es
+- path: /ms
+  url: https://www.microsoft.com
