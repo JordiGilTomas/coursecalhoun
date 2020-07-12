@@ -11,14 +11,18 @@ import (
 )
 
 var yamlFile string
+var jsonFile string
 
 func init() {
 	flag.StringVar(&yamlFile, "yaml", "routes.yaml", "Carga un fichero YAML")
+	flag.StringVar(&jsonFile, "json", "routes.json", "Carga un fichero YAML")
 }
 func main() {
 	flag.Parse()
 	file, err := os.Open(yamlFile)
+	fileJSON, err := os.Open(jsonFile)
 	yaml, err := ioutil.ReadAll(file)
+	jsonData, err := ioutil.ReadAll(fileJSON)
 	mux := defaultMux()
 
 	// Build the MapHandler using the mux as the fallback
@@ -39,11 +43,13 @@ func main() {
 	// 	  `
 	// }
 	yamlHandler, err := urlshort.YAMLHandler([]byte(yaml), mapHandler)
+
+	jsonHandler, err := urlshort.JSONHandler([]byte(jsonData), yamlHandler)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Starting the server on :8084")
-	http.ListenAndServe(":8084", yamlHandler)
+	fmt.Println("Starting the server on :8086")
+	http.ListenAndServe(":8086", jsonHandler)
 }
 
 func defaultMux() *http.ServeMux {

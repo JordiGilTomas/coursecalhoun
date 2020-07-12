@@ -1,6 +1,7 @@
 package urlshort
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"gopkg.in/yaml.v2"
@@ -26,8 +27,8 @@ func MapHandler(pathsToUrls map[string]string, fallback http.Handler) http.Handl
 }
 
 type data struct {
-	Path string `yaml:"path"`
-	URL  string `yaml:"url"`
+	Path string `yaml:"path" json:"path"`
+	URL  string `yaml:"url" json:"url"`
 }
 
 // YAMLHandler will parse the provided YAML and then return
@@ -55,6 +56,21 @@ func YAMLHandler(yml []byte, fallback http.Handler) (http.HandlerFunc, error) {
 	hf := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if index := getIndex(r.URL.String(), ymlData); index != -1 {
 			http.Redirect(w, r, ymlData[index].URL, 301)
+		} else {
+			fallback.ServeHTTP(w, r)
+		}
+	})
+
+	return hf, err
+}
+
+//JSONHandler urlshortener from json file
+func JSONHandler(jsondata []byte, fallback http.Handler) (http.HandlerFunc, error) {
+	var data []data
+	err := json.Unmarshal(jsondata, &data)
+	hf := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if index := getIndex(r.URL.String(), data); index != -1 {
+			http.Redirect(w, r, data[index].URL, 301)
 		} else {
 			fallback.ServeHTTP(w, r)
 		}
