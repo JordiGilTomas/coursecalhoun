@@ -65,8 +65,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Starting the server on :8087")
-	http.ListenAndServe(":8087", dbHandler)
+	fmt.Println("Starting the server on :8091")
+	http.ListenAndServe(":8091", dbHandler)
 }
 
 func getFirestoreRoutes() []map[string]interface{} {
@@ -88,12 +88,6 @@ func getFirestoreRoutes() []map[string]interface{} {
 			break
 		}
 		dbRoutes = append(dbRoutes, doc.Data())
-	}
-
-	for _, docs := range dbRoutes {
-		for k, v := range docs {
-			dbRoutes = append(dbRoutes, map[string]interface{}{k: v})
-		}
 	}
 	return dbRoutes
 }
