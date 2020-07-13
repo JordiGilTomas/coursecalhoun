@@ -15,7 +15,6 @@ import (
 // http.Handler will be called instead.
 func MapHandler(pathsToUrls map[string]string, fallback http.Handler) http.HandlerFunc {
 	//	TODO: Implement this...
-
 	hf := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if v, found := pathsToUrls[r.URL.String()]; found {
 			http.Redirect(w, r, v, 301)
@@ -52,6 +51,9 @@ func YAMLHandler(yml []byte, fallback http.Handler) (http.HandlerFunc, error) {
 
 	var ymlData []data
 	err := yaml.Unmarshal(yml, &ymlData)
+	if err != nil {
+		return nil, err
+	}
 
 	hf := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if index := getIndex(r.URL.String(), ymlData); index != -1 {
@@ -68,6 +70,9 @@ func YAMLHandler(yml []byte, fallback http.Handler) (http.HandlerFunc, error) {
 func JSONHandler(jsondata []byte, fallback http.Handler) (http.HandlerFunc, error) {
 	var data []data
 	err := json.Unmarshal(jsondata, &data)
+	if err != nil {
+		return nil, err
+	}
 	hf := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if index := getIndex(r.URL.String(), data); index != -1 {
 			http.Redirect(w, r, data[index].URL, 301)
@@ -77,6 +82,28 @@ func JSONHandler(jsondata []byte, fallback http.Handler) (http.HandlerFunc, erro
 	})
 
 	return hf, err
+}
+
+//DBHandler urlshortener from Database Firestore
+func DBHandler(db []map[string]interface{}, fallback http.Handler) (http.HandlerFunc, error) {
+	var data []data
+	dbdata, err := json.Marshal(db)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(dbdata, &data)
+	if err != nil {
+		return nil, err
+	}
+	hf := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if index := getIndex(r.URL.String(), data); index != -1 {
+			http.Redirect(w, r, data[index].URL, 301)
+		} else {
+			fallback.ServeHTTP(w, r)
+		}
+	})
+
+	return hf, nil
 }
 
 func getIndex(item string, slice []data) int {
